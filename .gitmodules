@@ -1,0 +1,3 @@
+[submodule "lib/abstractSTM32Fx"]
+	path = lib/abstractSTM32Fx
+	url = https://github.com/SlavaLikhohub/Abstract-STM32Fx
