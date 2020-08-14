@@ -42,3 +42,6 @@
 *.su
 *.idb
 *.pdb
+
+# Build dir
+build/*

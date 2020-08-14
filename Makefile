@@ -7,10 +7,14 @@ SRCS +=
 # User defines
 DEFINES = 
 # The libs which are linked to the resulting target
-LIBS = -Wl,--start-group -lc -lgcc -lnosys -Wl,--end-group
-LIBS += -lopencm3 -abstr_STM32f4
+LIBS = -Wl,--start-group -lc -lgcc -Wl,--end-group
+LIBS += -lopencm3 -labst_stm32f4
 # Possible values: debug, release
-PROFILE = release
+PROFILE = debug
+# Use semihosting or not. Possible values: 0, 1
+# Semihosting allows to pass printf() output and whole files between MCU and PC
+# but the built target will not work without debugger connected
+SEMIHOSTING ?= 0
 # Optimization flags for debug build:
 #   -Og -- optimize for debugging
 #   -g3 -- include the most verbose debugging information into elf
@@ -26,13 +30,12 @@ EXTRAFLAGS ?= $(OPTFLAGS) -std=gnu17 \
 			  -Wimplicit-function-declaration -Wredundant-decls \
               -Wstrict-prototypes -Wundef -Wshadow
 # Device is required for libopencm3
-DEVICE ?= stm32f103c8t6
+DEVICE ?= stm32f407vgt6
+# Version of abstract stm32fx
+TARGET_ABST ?= stm32f4
 # Possible values: soft, hard
-FPU ?= soft
-#FPU_FLAGS := -mfpu=fpv4-sp-d16 -mfloat-abi=$(FPU)
-# We want it built only for one MCU family to reduce build time
-# See libopencm3 Makefile for details
-LIBOPENCM3_TARGET ?= stm32/f1
+FPU ?= hard
+FPU_FLAGS := -mfpu=fpv4-sp-d16 -mfloat-abi=$(FPU)
 # Directory with project sources
 SRC_DIR ?= src
 # Project include directories where project headers are placed
@@ -41,17 +44,27 @@ INC_DIRS ?= inc
 BUILD_DIR ?= build
 # Libraries should reside in one dir
 LIB_DIR ?= lib
+# Directory of abstractSTM32fx
+ABSTSTM32_DIR = $(LIB_DIR)/abstractSTM32Fx
 # This definition is used by Makefile includes for libopencm3
-OPENCM3_DIR = $(LIB_DIR)/libopencm3
+OPENCM3_DIR = $(ABSTSTM32_DIR)/lib/libopencm3
 # Definitions required to generate linker script
 include $(OPENCM3_DIR)/mk/genlink-config.mk
 
-ARCHFLAGS := -mcpu=cortex-m3 -mthumb $(FPU_FLAGS)
+ARCHFLAGS := -mcpu=cortex-m4 -mthumb $(FPU_FLAGS)
 CFLAGS := $(ARCHFLAGS)
 CFLAGS += -fdata-sections -ffunction-sections
+CFLAGS += -DUSE_SEMIHOSTING=$(SEMIHOSTING)
 CFLAGS += $(addprefix -D,$(DEFINES)) $(genlink_cppflags) $(EXTRAFLAGS)
 
-LDFLAGS := $(ARCHFLAGS) --static -nostartfiles
+LDFLAGS := $(ARCHFLAGS) --static -nostartfiles 
+
+ifeq ("$(SEMIHOSTING)","1")
+LDFLAGS += --specs=rdimon.specs -lrdimon
+else
+LDFLAGS += -lnosys
+endif
+
 LDFLAGS += -L$(BUILD_DIR)/$(PROFILE) $(LIBS)
 # Remove unused sections
 ifneq ($(PROFILE),debug)
@@ -69,7 +82,7 @@ AS = $(TOOLCHAIN_PREFIX)gcc -x assembler
 CP = $(TOOLCHAIN_PREFIX)objcopy
 SZ = $(TOOLCHAIN_PREFIX)size -G -d
 GDB = $(TOOLCHAIN_PREFIX)gdb
-OOCD ?= openocd -f openocd_bluepill.cfg
+OOCD ?= openocd -f openocd_glstarterkit.cfg
 HEX = $(CP) -O ihex -S
 BIN = $(CP) -O binary -S
 
@@ -83,7 +96,7 @@ MAKEFLAGS += --no-print-directory
 LDSCRIPT = $(BUILD_DIR)/$(DEVICE).ld
 
 # All includes semi-automatically collected here
-INCS = -I$(OPENCM3_DIR)/include $(addprefix -I,$(INC_DIRS))
+INCS = -I$(OPENCM3_DIR)/include -I$(ABSTSTM32_DIR)/include $(addprefix -I,$(INC_DIRS))
 OBJECTS = $(SRCS:.c=.o)
 
 # where to place built object files
@@ -113,11 +126,17 @@ $(BUILD_DIR)/libopencm3-docs: $(OPENCM3_DIR)/Makefile | $(BUILD_DIR)/$(PROFILE)/
 # alias
 libopencm3-docs: $(BUILD_DIR)/libopencm3-docs
 
-$(BUILD_DIR)/$(PROFILE)/libopencm3.a: | $(BUILD_DIR)/$(PROFILE) $(OPENCM3_DIR)/Makefile
-	@echo Building libopencm3 for $(PROFILE) profile...
-	cd $(OPENCM3_DIR) && $(MAKE) $(MAKEFLAGS) TARGETS="$(LIBOPENCM3_TARGET)" FP_FLAGS="$(FPU_FLAGS)" CFLAGS="$(CFLAGS)" V=1 clean lib
-	cp $(OPENCM3_DIR)/lib/libopencm3_$(subst /,,$(LIBOPENCM3_TARGET)).a $@
-	@echo libopencm3 for $(PROFILE) profile is built
+$(BUILD_DIR)/$(PROFILE)/libopencm3.a: $(ABSTSTM32_DIR)/build/libopencm3.a $(BUILD_DIR)/$(PROFILE)
+	cp $< $@
+
+$(BUILD_DIR)/$(PROFILE)/libabst_$(TARGET_ABST).a: $(ABSTSTM32_DIR)/build/libabst_$(TARGET_ABST).a $(BUILD_DIR)/$(PROFILE)
+	cp $< $@
+
+$(ABSTSTM32_DIR)/build/libopencm3.a: $(ABSTSTM32_DIR)/Makefile
+	cd $(ABSTSTM32_DIR) && $(MAKE) $(MAKEFLAGS) TARGERS="$(TARGET_ABST)" V=1 clean all
+
+$(ABSTSTM32_DIR)/build/libabst_$(TARGET_ABST).a: $(ABSTSTM32_DIR)/Makefile
+	cd $(ABSTSTM32_DIR) && $(MAKE) $(MAKEFLAGS) TARGERS="$(TARGET_ABST)" V=1 clean all
 
 # Include rules to generate linker script
 include $(OPENCM3_DIR)/mk/genlink-rules.mk
@@ -130,6 +149,7 @@ $(OBJDIR)/%.o: $(SRC_DIR)/%.c | $(OBJDIR) $(BUILD_DIR)/$(PROFILE)/libopencm3.a
 ## Recipe for elf file, that is used for flashing and debugging, can be converted to bin/hex form
 $(BUILD_DIR)/$(PROFILE)/$(TARGET).elf: $(addprefix $(OBJDIR)/,$(OBJECTS)) | \
 $(BUILD_DIR)/$(PROFILE)/libopencm3.a \
+$(BUILD_DIR)/$(PROFILE)/libabst_$(TARGET_ABST).a \
 $(LDSCRIPT)
 	$(CC) -T$(LDSCRIPT) $< $(LDFLAGS) -o $@
 	@echo
@@ -156,7 +176,11 @@ flash: $(BUILD_DIR)/$(PROFILE)/$(TARGET).elf
 # - start openocd. It will listen for incoming connections on port 3333 by default
 # - start gdb and connect as: 'target extended-remote localhost:3333' or simply 'tar ext :3333'
 gdb: $(BUILD_DIR)/$(PROFILE)/$(TARGET).elf
+ifeq ("$(SEMIHOSTING)","1")
+	$(GDB) -ex 'target extended-remote | $(OOCD) -c "gdb_port pipe; init; arm semihosting enable; arm semihosting_fileio enable"' $<
+else
 	$(GDB) -ex 'target extended-remote | $(OOCD) -c "gdb_port pipe"' $<
+endif
 
 
 ## Clean build directory for current profile and its build artefacts
@@ -166,6 +190,7 @@ clean:
 
 ## Remove everything created during builds
 tidy: clean
+	cd $(ABSTSTM32_DIR) && $(MAKE) V=1 clean
 	cd $(OPENCM3_DIR) && $(MAKE) TARGETS="$(LIBOPENCM3_TARGET)" V=1 clean
 	-rm -rf $(BUILD_DIR)
 
