@@ -8,7 +8,7 @@ SRCS +=
 DEFINES = 
 # The libs which are linked to the resulting target
 LIBS = -Wl,--start-group -lc -lgcc -Wl,--end-group
-LIBS += -lopencm3 -labst_stm32f4
+LIBS += -labst_stm32f4 -lopencm3
 # Possible values: debug, release
 PROFILE = debug
 # Use semihosting or not. Possible values: 0, 1
@@ -82,7 +82,7 @@ AS = $(TOOLCHAIN_PREFIX)gcc -x assembler
 CP = $(TOOLCHAIN_PREFIX)objcopy
 SZ = $(TOOLCHAIN_PREFIX)size -G -d
 GDB = $(TOOLCHAIN_PREFIX)gdb
-OOCD ?= openocd -f openocd_glstarterkit.cfg
+OOCD ?= openocd -f openocd_STM32F4.cfg
 HEX = $(CP) -O ihex -S
 BIN = $(CP) -O binary -S
 
