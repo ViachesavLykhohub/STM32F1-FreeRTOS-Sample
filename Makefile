@@ -5,10 +5,10 @@ SRCS = $(TARGET).c
 # other sources added like that
 SRCS +=
 # User defines
-DEFINES = 
+DEFINES =
 # The libs which are linked to the resulting target
 LIBS = -Wl,--start-group -lc -lgcc -Wl,--end-group
-LIBS += -labst_stm32f4 -lopencm3
+LIBS += -labst_stm32f4 -lopencm3 -llist
 # Possible values: debug, release
 PROFILE = debug
 # Use semihosting or not. Possible values: 0, 1
@@ -50,6 +50,8 @@ ABSTSTM32_DIR = $(LIB_DIR)/abstractSTM32Fx
 OPENCM3_DIR = $(ABSTSTM32_DIR)/lib/libopencm3
 # Definitions required to generate linker script
 include $(OPENCM3_DIR)/mk/genlink-config.mk
+# List library
+LIST_DIR = $(ABSTSTM32_DIR)/lib/list
 
 ARCHFLAGS := -mcpu=cortex-m4 -mthumb $(FPU_FLAGS)
 CFLAGS := $(ARCHFLAGS)
@@ -57,7 +59,8 @@ CFLAGS += -fdata-sections -ffunction-sections
 CFLAGS += -DUSE_SEMIHOSTING=$(SEMIHOSTING)
 CFLAGS += $(addprefix -D,$(DEFINES)) $(genlink_cppflags) $(EXTRAFLAGS)
 
-LDFLAGS := $(ARCHFLAGS) --static -nostartfiles 
+LDFLAGS := $(ARCHFLAGS) --static -nostartfiles -specs=nano.specs -specs=nosys.specs
+
 
 ifeq ("$(SEMIHOSTING)","1")
 LDFLAGS += --specs=rdimon.specs -lrdimon
@@ -96,7 +99,11 @@ MAKEFLAGS += --no-print-directory
 LDSCRIPT = $(BUILD_DIR)/$(DEVICE).ld
 
 # All includes semi-automatically collected here
-INCS = -I$(OPENCM3_DIR)/include -I$(ABSTSTM32_DIR)/include $(addprefix -I,$(INC_DIRS))
+INCS =  -I$(OPENCM3_DIR)/include 
+INCS += -I$(ABSTSTM32_DIR)/include 
+INCS +=  $(addprefix -I,$(INC_DIRS))
+INCS += -I$(LIST_DIR)/src
+
 OBJECTS = $(SRCS:.c=.o)
 
 # where to place built object files
@@ -132,10 +139,16 @@ $(BUILD_DIR)/$(PROFILE)/libopencm3.a: $(ABSTSTM32_DIR)/build/libopencm3.a $(BUIL
 $(BUILD_DIR)/$(PROFILE)/libabst_$(TARGET_ABST).a: $(ABSTSTM32_DIR)/build/libabst_$(TARGET_ABST).a $(BUILD_DIR)/$(PROFILE)
 	cp $< $@
 
+$(BUILD_DIR)/$(PROFILE)/liblist.a: $(ABSTSTM32_DIR)/build/liblist.a $(BUILD_DIR)/$(PROFILE)
+	cp $< $@
+
 $(ABSTSTM32_DIR)/build/libopencm3.a: $(ABSTSTM32_DIR)/Makefile
 	cd $(ABSTSTM32_DIR) && $(MAKE) $(MAKEFLAGS) TARGERS="$(TARGET_ABST)" V=1 clean all
 
 $(ABSTSTM32_DIR)/build/libabst_$(TARGET_ABST).a: $(ABSTSTM32_DIR)/Makefile
+	cd $(ABSTSTM32_DIR) && $(MAKE) $(MAKEFLAGS) TARGERS="$(TARGET_ABST)" V=1 clean all
+
+$(ABSTSTM32_DIR)/build/liblist.a: $(ABSTSTM32_DIR)/Makefile
 	cd $(ABSTSTM32_DIR) && $(MAKE) $(MAKEFLAGS) TARGERS="$(TARGET_ABST)" V=1 clean all
 
 # Include rules to generate linker script
@@ -144,12 +157,13 @@ include $(OPENCM3_DIR)/mk/genlink-rules.mk
 
 ## Recipe for building project object files, placed in separate directory
 $(OBJDIR)/%.o: $(SRC_DIR)/%.c | $(OBJDIR) $(BUILD_DIR)/$(PROFILE)/libopencm3.a
-	$(CC) $(CFLAGS) $(INCS) -c $< -o $@ 
+	$(CC) $(CFLAGS) $(INCS) -c $< -o $@
 
 ## Recipe for elf file, that is used for flashing and debugging, can be converted to bin/hex form
 $(BUILD_DIR)/$(PROFILE)/$(TARGET).elf: $(addprefix $(OBJDIR)/,$(OBJECTS)) | \
 $(BUILD_DIR)/$(PROFILE)/libopencm3.a \
 $(BUILD_DIR)/$(PROFILE)/libabst_$(TARGET_ABST).a \
+$(BUILD_DIR)/$(PROFILE)/liblist.a \
 $(LDSCRIPT)
 	$(CC) -T$(LDSCRIPT) $< $(LDFLAGS) -o $@
 	@echo
@@ -191,6 +205,7 @@ clean:
 ## Remove everything created during builds
 tidy: clean
 	cd $(ABSTSTM32_DIR) && $(MAKE) V=1 clean
+	cd $(LIST_DIR) && $(MAKE) clean
 	cd $(OPENCM3_DIR) && $(MAKE) TARGETS="$(LIBOPENCM3_TARGET)" V=1 clean
 	-rm -rf $(BUILD_DIR)
 
