@@ -146,7 +146,7 @@ $(ABSTSTM32_DIR)/build/libopencm3.a: $(ABSTSTM32_DIR)/Makefile
 	cd $(ABSTSTM32_DIR) && $(MAKE) $(MAKEFLAGS) TARGERS="$(TARGET_ABST)" V=1 clean all
 
 $(ABSTSTM32_DIR)/build/libabst_$(TARGET_ABST).a: $(ABSTSTM32_DIR)/Makefile
-	cd $(ABSTSTM32_DIR) && $(MAKE) $(MAKEFLAGS) TARGERS="$(TARGET_ABST)" V=1 clean all
+	cd $(ABSTSTM32_DIR) && $(MAKE) $(MAKEFLAGS) PROFILE=$(PROFILE) TARGERS="$(TARGET_ABST)" V=$(V) clean all
 
 $(ABSTSTM32_DIR)/build/liblist.a: $(ABSTSTM32_DIR)/Makefile
 	cd $(ABSTSTM32_DIR) && $(MAKE) $(MAKEFLAGS) TARGERS="$(TARGET_ABST)" V=1 clean all

@@ -14,7 +14,6 @@ struct abst_pin led = {
     .is_inverse = false
 };
 
-
 struct abst_pin led_pwm = {
     .port = AB_GPIOD,
     .num = 13,
