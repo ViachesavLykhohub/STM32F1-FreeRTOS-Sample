@@ -3,7 +3,7 @@
 #include <libopencm3/stm32/gpio.h>
 #include <stdint.h>
 
-struct pin led = {
+struct abst_pin led = {
     .port = AB_GPIOD,
     .num = 12,
     .dir = GPIO_MODE_OUTPUT,
@@ -15,7 +15,7 @@ struct pin led = {
 };
 
 
-struct pin led_pwm = {
+struct abst_pin led_pwm = {
     .port = AB_GPIOD,
     .num = 13,
     .dir = GPIO_MODE_OUTPUT,
@@ -26,7 +26,7 @@ struct pin led_pwm = {
     .is_inverse = false
 };
 
-struct pin button = {
+struct abst_pin button = {
     .port = AB_GPIOA,
     .num = 0,
     .dir = GPIO_MODE_INPUT,
@@ -37,7 +37,7 @@ struct pin button = {
     .is_inverse = false
 };
 
-struct pin led_but = {
+struct abst_pin led_but = {
     .port = AB_GPIOD,
     .num = 14,
     .dir = GPIO_MODE_OUTPUT,
@@ -48,7 +48,7 @@ struct pin led_but = {
     .is_inverse = true
 };
 
-struct pin_group buttons = {
+struct abst_pin_group buttons = {
     .port = AB_GPIOC,
     .num = 1 << 6 | 1 << 8 | 1 << 9 | 1 << 11,
     .dir = GPIO_MODE_INPUT,
@@ -59,7 +59,7 @@ struct pin_group buttons = {
     .is_inverse = 0b1111
 };
 
-struct pin_group leds = {
+struct abst_pin_group leds = {
     .port = AB_GPIOD,
     .num = 1 << 12 | 1 << 13 | 1 << 14 | 1 << 15,
     .dir = GPIO_MODE_OUTPUT,
