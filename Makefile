@@ -1,14 +1,15 @@
 # The main (project top) file without .c
 TARGET = blinky
+# Device is required for libopencm3. Based on this will choose platform of abstractSTM32
+DEVICE ?= stm32f407vgt6
 # All source files go here:
 SRCS = $(TARGET).c
 # other sources added like that
 SRCS +=
 # User defines
 DEFINES =
-# The libs which are linked to the resulting target
+# The libs which are linked to the resulting target. Note some libs links below
 LIBS = -Wl,--start-group -lc -lgcc -Wl,--end-group
-LIBS += -labst_stm32f4 -lopencm3 -llist
 # Possible values: debug, release
 PROFILE = debug
 # Use semihosting or not. Possible values: 0, 1
@@ -29,13 +30,39 @@ EXTRAFLAGS ?= $(OPTFLAGS) -std=gnu17 \
 			  -Wall -Wextra -Wpedantic \
 			  -Wimplicit-function-declaration -Wredundant-decls \
               -Wstrict-prototypes -Wundef -Wshadow
-# Device is required for libopencm3
-DEVICE ?= stm32f407vgt6
+
+ifeq ($(DEVICE), stm32f407vgt6) #default
+
 # Version of abstract stm32fx
 TARGET_ABST ?= stm32f4
 # Possible values: soft, hard
 FPU ?= hard
 FPU_FLAGS := -mfpu=fpv4-sp-d16 -mfloat-abi=$(FPU)
+
+ARCHFLAGS := -mcpu=cortex-m4 -mthumb $(FPU_FLAGS)
+
+OOCD ?= openocd -f openocd_STM32F4.cfg
+
+LIBS += -labst_stm32f4
+
+endif
+ifeq ($(DEVICE), stm32f103c8t6)
+
+# Version of abstract stm32fx
+TARGET_ABST ?= stm32f1
+# Possible values: soft, hard
+FPU ?= soft
+
+ARCHFLAGS := -mcpu=cortex-m3 -mthumb $(FPU_FLAGS)
+
+OOCD ?= openocd -f openocd_STM32F1.cfg
+
+LIBS += -labst_stm32f1
+
+endif
+
+LIBS += -lopencm3 -llist
+
 # Directory with project sources
 SRC_DIR ?= src
 # Project include directories where project headers are placed
@@ -53,7 +80,6 @@ include $(OPENCM3_DIR)/mk/genlink-config.mk
 # List library
 LIST_DIR = $(ABSTSTM32_DIR)/lib/list
 
-ARCHFLAGS := -mcpu=cortex-m4 -mthumb $(FPU_FLAGS)
 CFLAGS := $(ARCHFLAGS)
 CFLAGS += -fdata-sections -ffunction-sections
 CFLAGS += -DUSE_SEMIHOSTING=$(SEMIHOSTING)
@@ -85,7 +111,6 @@ AS = $(TOOLCHAIN_PREFIX)gcc -x assembler
 CP = $(TOOLCHAIN_PREFIX)objcopy
 SZ = $(TOOLCHAIN_PREFIX)size -G -d
 GDB = $(TOOLCHAIN_PREFIX)gdb
-OOCD ?= openocd -f openocd_STM32F4.cfg
 HEX = $(CP) -O ihex -S
 BIN = $(CP) -O binary -S
 
@@ -143,13 +168,13 @@ $(BUILD_DIR)/$(PROFILE)/liblist.a: $(ABSTSTM32_DIR)/build/liblist.a $(BUILD_DIR)
 	cp $< $@
 
 $(ABSTSTM32_DIR)/build/libopencm3.a: $(ABSTSTM32_DIR)/Makefile
-	cd $(ABSTSTM32_DIR) && $(MAKE) $(MAKEFLAGS) TARGERS="$(TARGET_ABST)" V=1 clean all
+	cd $(ABSTSTM32_DIR) && $(MAKE) $(MAKEFLAGS) TARGETS=$(TARGET_ABST) V=1 clean all
 
 $(ABSTSTM32_DIR)/build/libabst_$(TARGET_ABST).a: $(ABSTSTM32_DIR)/Makefile
-	cd $(ABSTSTM32_DIR) && $(MAKE) $(MAKEFLAGS) PROFILE=$(PROFILE) TARGERS="$(TARGET_ABST)" V=$(V) clean all
+	cd $(ABSTSTM32_DIR) && $(MAKE) $(MAKEFLAGS) PROFILE=$(PROFILE) TARGETS=$(TARGET_ABST) V=$(V) clean all
 
 $(ABSTSTM32_DIR)/build/liblist.a: $(ABSTSTM32_DIR)/Makefile
-	cd $(ABSTSTM32_DIR) && $(MAKE) $(MAKEFLAGS) TARGERS="$(TARGET_ABST)" V=1 clean all
+	cd $(ABSTSTM32_DIR) && $(MAKE) $(MAKEFLAGS) TARGETS=$(TARGET_ABST) V=1 clean all
 
 # Include rules to generate linker script
 include $(OPENCM3_DIR)/mk/genlink-rules.mk
@@ -211,7 +236,7 @@ tidy: clean
 
 
 ## Build all
-target $(TARGET): $(BUILD_DIR)/$(PROFILE)/$(TARGET).bin $(BUILD_DIR)/$(PROFILE)/$(TARGET).hex
+target $(TARGET): | $(BUILD_DIR)/$(PROFILE)/$(TARGET).bin $(BUILD_DIR)/$(PROFILE)/$(TARGET).hex
 
 ## Alias for release build
 ## Catchall target. release-flash becomes make PROFILE=release flash
