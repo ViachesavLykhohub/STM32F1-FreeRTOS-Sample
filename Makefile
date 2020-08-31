@@ -1,5 +1,5 @@
 # The main (project top) file without .c
-TARGET = blinky
+TARGET = blinky_stm32f4
 # Device is required for libopencm3. Based on this will choose platform of abstractSTM32
 DEVICE ?= stm32f407vgt6
 # All source files go here:
@@ -31,6 +31,7 @@ EXTRAFLAGS ?= $(OPTFLAGS) -std=gnu17 \
 			  -Wimplicit-function-declaration -Wredundant-decls \
               -Wstrict-prototypes -Wundef -Wshadow
 
+# STM32F4 Config ===============================================
 ifeq ($(DEVICE), stm32f407vgt6) #default
 
 # Version of abstract stm32fx
@@ -46,6 +47,8 @@ OOCD ?= openocd -f openocd_STM32F4.cfg
 LIBS += -labst_stm32f4
 
 endif
+# ==============================================================
+# STM32F1 Config ===============================================
 ifeq ($(DEVICE), stm32f103c8t6)
 
 # Version of abstract stm32fx
@@ -60,6 +63,7 @@ OOCD ?= openocd -f openocd_STM32F1.cfg
 LIBS += -labst_stm32f1
 
 endif
+# ==============================================================
 
 LIBS += -lopencm3 -llist
 

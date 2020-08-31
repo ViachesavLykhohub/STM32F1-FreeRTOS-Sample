@@ -7,7 +7,7 @@ Description
 
 This repository is an example of usage `Abstract-STM32Fx <https://github.com/SlavaLikhohub/Abstract-STM32Fx>` library.
 
-It was tested using the STM32F4DISCOVERY installed in a Global Logic Starter Kit. 
+It was tested using the **STM32F4DISCOVERY** installed in a **Global Logic Starter Kit** and **STM32F103 Bluepill**. 
 If you are using something else consider reviewing pinouts settings at the beginning of each example.
 
 Requirements
@@ -33,20 +33,14 @@ How to start
       git submodule update --init --recursive
       
 #. Check pinouts at beginings of **src/*.c** files.
-#. Connect your STM32 to computer (NOTE: this example is for the STM32F4).
+#. Connect your STM32 to computer.
 #. Build and flash the program:
    
-   Blinky example
-
-   .. code-block:: shell-session
+.. code-block:: shell-session
       
-      make PROFILE=release TARGET=blinky tidy target flash
+   make DEVICE=<device> TARGET=<example> PROFILE=release tidy all
 
-   or LCD example
-   
-   .. code-block:: shell-session
-
-      make PROFILE=release TARGET=lcd tidy target flash
+where ``<device>`` is ``stm32f407vgt6`` or ``stm32f103c8t6``, ``<example>`` is a file from ``src dir`` without extantion (i.e. blinky_stm32f4)
 
 Documentation
 *************
