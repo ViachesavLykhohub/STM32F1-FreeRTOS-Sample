@@ -1,71 +1,78 @@
+/**
+ * Example of basic usage
+ * To build and flash call 
+ * make TARGET=blinky_discovery_stm32f4 PROFILE=release V=1 DEVICE=stm32f407vgt6 tidy all
+ */
+
 #include <abstractSTM32.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
 #include <stdint.h>
 
 struct abst_pin led = {
-    .port = AB_GPIOD,
+    .port = ABST_GPIOD,
     .num = 12,
-    .mode = GPIO_MODE_OUTPUT,
-    .otype = GPIO_OTYPE_PP,
-    .speed = GPIO_OSPEED_2MHZ,
-    .pull_up_down = GPIO_PUPD_NONE,
+    .mode = ABST_MODE_OUTPUT,
+    .otype = ABST_OTYPE_PP,
+    .speed = ABST_OSPEED_2MHZ,
+    .pull_up_down = ABST_PUPD_NONE,
     .is_inverse = false
 };
 
 struct abst_pin led_pwm = {
-    .port = AB_GPIOD,
+    .port = ABST_GPIOD,
     .num = 13,
-    .mode = GPIO_MODE_OUTPUT,
-    .otype = GPIO_OTYPE_PP,
-    .speed = GPIO_OSPEED_2MHZ,
-    .pull_up_down = GPIO_PUPD_NONE,
+    .mode = ABST_MODE_OUTPUT,
+    .otype = ABST_OTYPE_PP,
+    .speed = ABST_OSPEED_2MHZ,
+    .pull_up_down = ABST_PUPD_NONE,
     .is_inverse = false
 };
 
 struct abst_pin button = {
-    .port = AB_GPIOA,
+    .port = ABST_GPIOA,
     .num = 0,
-    .mode = GPIO_MODE_INPUT,
-    .otype = GPIO_OTYPE_PP,
-    .speed = GPIO_OSPEED_2MHZ,
-    .pull_up_down = GPIO_PUPD_NONE,
+    .mode = ABST_MODE_INPUT,
+    .otype = ABST_OTYPE_PP,
+    .speed = ABST_OSPEED_2MHZ,
+    .pull_up_down = ABST_PUPD_NONE,
     .is_inverse = false
 };
 
 struct abst_pin led_but = {
-    .port = AB_GPIOD,
+    .port = ABST_GPIOD,
     .num = 14,
-    .mode = GPIO_MODE_OUTPUT,
-    .otype = GPIO_OTYPE_PP,
-    .speed = GPIO_OSPEED_2MHZ,
-    .pull_up_down = GPIO_PUPD_PULLUP,
+    .mode = ABST_MODE_OUTPUT,
+    .otype = ABST_OTYPE_PP,
+    .speed = ABST_OSPEED_2MHZ,
+    .pull_up_down = ABST_PUPD_PULLUP,
     .is_inverse = true
 };
 
+// External buttons
 struct abst_pin_group buttons = {
-    .port = AB_GPIOC,
+    .port = ABST_GPIOC,
     .num = 1 << 6 | 1 << 8 | 1 << 9 | 1 << 11,
-    .mode = GPIO_MODE_INPUT,
-    .otype = GPIO_OTYPE_PP,
-    .speed = GPIO_OSPEED_2MHZ,
-    .pull_up_down = GPIO_PUPD_NONE,
+    .mode = ABST_MODE_INPUT,
+    .otype = ABST_OTYPE_PP,
+    .speed = ABST_OSPEED_2MHZ,
+    .pull_up_down = ABST_PUPD_NONE,
     .is_inverse = 0b1111
 };
 
 struct abst_pin_group leds = {
-    .port = AB_GPIOD,
+    .port = ABST_GPIOD,
     .num = 1 << 12 | 1 << 13 | 1 << 14 | 1 << 15,
-    .mode = GPIO_MODE_OUTPUT,
-    .otype = GPIO_OTYPE_PP,
-    .speed = GPIO_OSPEED_2MHZ,
-    .pull_up_down = GPIO_PUPD_NONE,
+    .mode = ABST_MODE_OUTPUT,
+    .otype = ABST_OTYPE_PP,
+    .speed = ABST_OSPEED_2MHZ,
+    .pull_up_down = ABST_PUPD_NONE,
     .is_inverse = false
 };
 
 int main(void)
 {
-    abst_init(16e6);
+    abst_init(16e6, 0);
     abst_gpio_init(&led);
     abst_gpio_init(&led_pwm);
     abst_gpio_init(&led_but);
