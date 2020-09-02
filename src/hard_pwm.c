@@ -1,15 +1,17 @@
 /**
  * Example of usage hard PWM with STM32F4
  * To build and flash call
- * make TARGET=hard_pwm_f4 PROFILE=release DEVICE=stm32f407vgt6 V=1 tidy all
+ * make TARGET=hard_pwm PROFILE=release DEVICE=stm32f407vgt6 V=1 tidy all
+ * or
+ * make TARGET=hard_pwm PROFILE=release DEVICE=stm32f103c8t6 V=1 tidy all
  */
 
 #include <abstractSTM32.h>
 #include <stdint.h>
 
 struct abst_pin led = {
-    .port = ABST_GPIOD,
-    .num = 12,
+    .port = ABST_GPIOC, // ABST_GPIOD for STM32F4 Discovery
+    .num = 13,
     .mode = ABST_MODE_OUTPUT,
     .otype = ABST_OTYPE_PP,
     .speed = ABST_OSPEED_2MHZ,
@@ -17,9 +19,9 @@ struct abst_pin led = {
     .is_inverse = false
 };
 
-struct abst_pin led_pwm = {
-    .port = ABST_GPIOE,
-    .num = 9,
+struct abst_pin led_pwm = { // Require external connected LED
+    .port = ABST_GPIOA,
+    .num = 8,
     .mode = ABST_MODE_OUTPUT,
     .otype = ABST_OTYPE_PP,
     .speed = ABST_OSPEED_50MHZ,
@@ -35,7 +37,7 @@ int main(void)
     abst_gpio_init(&led_pwm);
 
     abst_digital_write(&led, 1);
-    abst_digital_write(&led_pwm, 0);
+    abst_digital_write(&led_pwm, 1);
     abst_delay_ms(2e3);
 
 
