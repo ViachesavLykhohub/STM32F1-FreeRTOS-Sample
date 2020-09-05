@@ -1,11 +1,12 @@
 /**
  * Example of using LCD display
  *
- * Call `make TARGET=adc PROFILE=release DEVICE=stm32f407vgt6 V=1 tidy all`
+ * Call `make TARGET=adc_discovery_f4 PROFILE=release DEVICE=stm32f407vgt6 V=1 tidy all`
  */ 
 
 #include <abstractSTM32.h>
 #include <abstractLCD.h>
+#include <abstractADC.h>
 #include <stdint.h>
 #include <stdio.h>
 

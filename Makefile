@@ -20,7 +20,7 @@ SEMIHOSTING ?= 0
 #   -Og -- optimize for debugging
 #   -g3 -- include the most verbose debugging information into elf
 #   -ggdb3 -- the same as g3, but the information is included in gdb format
-OPTFLAGS_debug = -Og -ggdb3
+OPTFLAGS_debug = -O0 -ggdb3
 # Optimization flags for release build: -Os -- optimize for smaller size
 OPTFLAGS_release = -Os
 # Optimization flags. Here we choose depending on profile

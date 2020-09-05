@@ -36,8 +36,6 @@ int main(void)
 {
     abst_init(8e6, 0);
 
-    abst_delay_ms(2e3);
-
     abst_gpio_init(&led_pwm);
     abst_digital_write(&led_pwm, 1);
     abst_gpio_init(&acd_channel);
