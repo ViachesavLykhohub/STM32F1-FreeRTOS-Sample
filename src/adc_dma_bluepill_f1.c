@@ -1,13 +1,16 @@
 /**
- * Example of ADC
+ * Example of using an ADC in continious mode with DMA
  *
- * Call `make TARGET=adc_bluepill_f1 PROFILE=release DEVICE=stm32f103c8t6 V=1 tidy all`
+ * `make TARGET=adc_dma_bluepill_f1 PROFILE=release DEVICE=stm32f103c8t6 V=1 tidy all`
  */ 
 
 #include <abstractSTM32.h>
+#include <abstractLCD.h>
 #include <abstractADC.h>
+
 #include <stdint.h>
 #include <stdio.h>
+
 
 struct abst_pin adc_channel = {
     .port = ABST_GPIOA,
@@ -36,20 +39,28 @@ struct abst_pin led_pwm = {
 int main(void)
 {
     abst_init(8e6, 0);
-    abst_adc_init_single_conv(1, 2);
-    abst_gpio_init(&led_pwm);
-    abst_digital_write(&led_pwm, 1);
-    
-    abst_gpio_init(&adc_channel); 
 
-    abst_delay_ms(1e3);
+    abst_gpio_init(&led_pwm);
     abst_digital_write(&led_pwm, 0);
 
+    abst_gpio_init(&adc_channel);
+
+
+    volatile uint16_t val[] = {0};
+    struct abst_pin *pins_arr[] = {&adc_channel};
+
+    enum abst_errors err = abst_adc_read_cont(pins_arr, val, 1, 2, 2);
+    if (err != ABST_OK) {
+        while (1) {
+            abst_digital_write(&led_pwm, 1);
+            abst_delay_ms(1e2);
+            abst_digital_write(&led_pwm, 0);
+            abst_delay_ms(1e2);
+        }
+    }
+         
     while (1) {
-        uint32_t val = abst_adc_read(&adc_channel);
-
-        abst_pwm_soft(&led_pwm, (val * 256) / 1024);
-
+        abst_pwm_soft(&led_pwm, (unsigned int) val[0] * 255 / 4095);
         abst_delay_ms(1e2);
     }
 }
