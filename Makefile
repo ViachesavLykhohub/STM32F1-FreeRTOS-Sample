@@ -29,7 +29,7 @@ OPTFLAGS ?= ${OPTFLAGS_${PROFILE}}
 EXTRAFLAGS ?= $(OPTFLAGS) -std=gnu17 \
 			  -Wall -Wextra -Wpedantic \
 			  -Wimplicit-function-declaration -Wredundant-decls \
-              -Wstrict-prototypes -Wundef -Wshadow
+			  -Wstrict-prototypes -Wundef -Wshadow
 
 # STM32F4 Config ===============================================
 ifeq ($(DEVICE), stm32f407vgt6) #default
@@ -65,7 +65,7 @@ LIBS += -labst_stm32f1
 endif
 # ==============================================================
 
-LIBS += -lopencm3 -llist
+LIBS += -lopencm3 -llist -lfifo
 
 # Directory with project sources
 SRC_DIR ?= src
@@ -83,6 +83,8 @@ OPENCM3_DIR = $(ABSTSTM32_DIR)/lib/libopencm3
 include $(OPENCM3_DIR)/mk/genlink-config.mk
 # List library
 LIST_DIR = $(ABSTSTM32_DIR)/lib/list
+#Fifo dir
+FIFO_DIR = $(ABSTSTM32_DIR)/lib/fifo-buffer
 
 CFLAGS := $(ARCHFLAGS)
 CFLAGS += -fdata-sections -ffunction-sections
@@ -132,6 +134,7 @@ INCS =  -I$(OPENCM3_DIR)/include
 INCS += -I$(ABSTSTM32_DIR)/include 
 INCS +=  $(addprefix -I,$(INC_DIRS))
 INCS += -I$(LIST_DIR)/src
+INCS += -I$(FIFO_DIR)/include
 
 OBJECTS = $(SRCS:.c=.o)
 
@@ -162,14 +165,17 @@ $(BUILD_DIR)/libopencm3-docs: $(OPENCM3_DIR)/Makefile | $(BUILD_DIR)/$(PROFILE)/
 # alias
 libopencm3-docs: $(BUILD_DIR)/libopencm3-docs
 
-$(BUILD_DIR)/$(PROFILE)/libopencm3.a: $(ABSTSTM32_DIR)/build/libopencm3.a $(BUILD_DIR)/$(PROFILE)
+$(BUILD_DIR)/$(PROFILE)/%.a: $(ABSTSTM32_DIR)/build/%.a $(BUILD_DIR)/$(PROFILE)
 	cp $< $@
 
-$(BUILD_DIR)/$(PROFILE)/libabst_$(TARGET_ABST).a: $(ABSTSTM32_DIR)/build/libabst_$(TARGET_ABST).a $(BUILD_DIR)/$(PROFILE)
+$(BUILD_DIR)/$(PROFILE)/libfifo.a: $(ABSTSTM32_DIR)/build/libfifo.a $(BUILD_DIR)/$(PROFILE)
 	cp $< $@
 
-$(BUILD_DIR)/$(PROFILE)/liblist.a: $(ABSTSTM32_DIR)/build/liblist.a $(BUILD_DIR)/$(PROFILE)
-	cp $< $@
+# $(BUILD_DIR)/$(PROFILE)/libabst_$(TARGET_ABST).a: $(ABSTSTM32_DIR)/build/libabst_$(TARGET_ABST).a $(BUILD_DIR)/$(PROFILE)
+# 	cp $< $@
+
+# $(BUILD_DIR)/$(PROFILE)/liblist.a: $(ABSTSTM32_DIR)/build/liblist.a $(BUILD_DIR)/$(PROFILE)
+# 	cp $< $@
 
 $(ABSTSTM32_DIR)/build/libopencm3.a: $(ABSTSTM32_DIR)/Makefile
 	cd $(ABSTSTM32_DIR) && $(MAKE) $(MAKEFLAGS) TARGETS=$(TARGET_ABST) V=1 clean all
@@ -189,10 +195,12 @@ $(OBJDIR)/%.o: $(SRC_DIR)/%.c | $(OBJDIR) $(BUILD_DIR)/$(PROFILE)/libopencm3.a
 	$(CC) $(CFLAGS) $(INCS) -c $< -o $@
 
 ## Recipe for elf file, that is used for flashing and debugging, can be converted to bin/hex form
-$(BUILD_DIR)/$(PROFILE)/$(TARGET).elf: $(addprefix $(OBJDIR)/,$(OBJECTS)) | \
+$(BUILD_DIR)/$(PROFILE)/$(TARGET).elf: \
+$(addprefix $(OBJDIR)/,$(OBJECTS)) | \
 $(BUILD_DIR)/$(PROFILE)/libopencm3.a \
 $(BUILD_DIR)/$(PROFILE)/libabst_$(TARGET_ABST).a \
 $(BUILD_DIR)/$(PROFILE)/liblist.a \
+$(BUILD_DIR)/$(PROFILE)/libfifo.a \
 $(LDSCRIPT)
 	$(CC) -T$(LDSCRIPT) $< $(LDFLAGS) -o $@
 	@echo
@@ -236,6 +244,7 @@ tidy: clean
 	cd $(ABSTSTM32_DIR) && $(MAKE) V=1 clean
 	cd $(LIST_DIR) && $(MAKE) clean
 	cd $(OPENCM3_DIR) && $(MAKE) TARGETS="$(LIBOPENCM3_TARGET)" V=1 clean
+	cd $(FIFO_DIR) && $(MAKE) clean
 	-rm -rf $(BUILD_DIR)
 
 
