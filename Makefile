@@ -16,6 +16,10 @@ PROFILE = debug
 # Semihosting allows to pass printf() output and whole files between MCU and PC
 # but the built target will not work without debugger connected
 SEMIHOSTING ?= 0
+
+# For abstractLOG.h
+LOG ?= 0
+
 # Optimization flags for debug build:
 #   -Og -- optimize for debugging
 #   -g3 -- include the most verbose debugging information into elf
@@ -89,6 +93,7 @@ FIFO_DIR = $(ABSTSTM32_DIR)/lib/fifo-buffer
 CFLAGS := $(ARCHFLAGS)
 CFLAGS += -fdata-sections -ffunction-sections
 CFLAGS += -DUSE_SEMIHOSTING=$(SEMIHOSTING)
+CFLAGS += -DLOG=$(LOG)
 CFLAGS += $(addprefix -D,$(DEFINES)) $(genlink_cppflags) $(EXTRAFLAGS)
 
 LDFLAGS := $(ARCHFLAGS) --static -nostartfiles -specs=nano.specs -specs=nosys.specs

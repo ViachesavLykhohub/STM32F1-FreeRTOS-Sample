@@ -10,7 +10,6 @@
 
 #include <abstractSTM32.h>
 #include <abstractUSART.h>
-#include <libopencm3/stm32/rcc.h>
 
 #define len(arr) sizeof(arr)/sizeof(arr[0])
 
