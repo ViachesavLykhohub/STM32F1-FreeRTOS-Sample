@@ -29,7 +29,7 @@ How to start
    
    .. code-block:: shell-session
       
-      git clone https://github.com/kpi-keoa/glsk_stm32_toolchain
+      git clone https://github.com/SlavaLikhohub/Abstract-STM32Fx-Sample
       git submodule update --init --recursive
       
 #. Check pinouts at beginings of **src/*.c** files.
