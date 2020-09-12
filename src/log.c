@@ -23,17 +23,22 @@ struct abst_pin led = {
 
 int main(void)
 {
-	abst_init(16e6, 0);
-	abst_gpio_init(&led);
-	abst_log_init();
+    abst_init(16e6, 0);
+    abst_gpio_init(&led);
+    abst_log_init();
 
-	while(1) {
-		abst_digital_write(&led, 1);
-		abst_log("Led is turned on\n");
-		abst_delay_ms(1e3);
+    volatile uint32_t time = 0;
 
-		abst_digital_write(&led, 0);
-		abst_log("Led is turned off\n");		
-		abst_delay_ms(1e3);
-	}
+    while(1) {
+        abst_digital_write(&led, 1);
+        abst_log("Led is turned on\n");
+        abst_delay_ms(1e3);
+        
+        time = abst_time_ms();
+        abst_logf("Current time %u ms\n", time);
+
+        abst_digital_write(&led, 0);
+        abst_log("Led is turned off\n");        
+        abst_delay_ms(1e3);
+    }
 }
