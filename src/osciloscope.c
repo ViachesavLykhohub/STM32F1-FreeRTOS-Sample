@@ -1,4 +1,5 @@
 /*
+ * Visualize the result using any of Serial Plotters (i.e. in Arduino IDE)
  * make TARGET=osciloscope PROFILE=release DEVICE=stm32f103c8t6 V=1 LOG=1 tidy all
  */
 
