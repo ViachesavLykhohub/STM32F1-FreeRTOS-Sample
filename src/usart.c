@@ -23,9 +23,16 @@ struct abst_usart USART =
     .baud_rate = 9600,
 };
 
+
 struct abst_pin led = {
+#ifdef STM32F1
     .port = ABST_GPIOA,
     .num = 3,
+#endif 
+#ifdef STM32F4
+    .port = ABST_GPIOD,
+    .num = 12,
+#endif
     .mode = ABST_MODE_OUTPUT,
     .otype = ABST_OTYPE_PP,
     .speed = ABST_OSPEED_2MHZ,
@@ -34,10 +41,17 @@ struct abst_pin led = {
 };
 
 struct abst_pin TX = {
+#ifdef STM32F1
     .port = ABST_GPIOB,
     .num = 10,
+#endif
+#ifdef STM32F4
+    .port = ABST_GPIOD,
+    .num = 8,
+#endif
     .mode = ABST_MODE_AF,
-    .af_dir = ABST_AF_OUTPUT,
+    .af = 7, // For STM32F4
+    .af_dir = ABST_AF_OUTPUT,  // For STM32F1
     .otype = ABST_OTYPE_PP,
     .speed = ABST_OSPEED_2MHZ,
     .pull_up_down = ABST_PUPD_NONE,
@@ -45,10 +59,17 @@ struct abst_pin TX = {
 };
 
 struct abst_pin RX = {
+#ifdef STM32F1
     .port = ABST_GPIOB,
     .num = 11,
+#endif
+#ifdef STM32F4
+    .port = ABST_GPIOD,
+    .num = 9,
+#endif
     .mode = ABST_MODE_AF,
-    .af_dir = ABST_AF_INPUT,
+    .af = 7, // For STM32F4
+    .af_dir = ABST_AF_INPUT, // For STM32F1
     .otype = ABST_OTYPE_PP,
     .speed = ABST_OSPEED_2MHZ,
     .pull_up_down = ABST_PUPD_NONE,
@@ -63,7 +84,14 @@ void usart3_isr(void)
 
 int main(void)
 {
-    abst_init(8e6, 100);
+    uint32_t AHB;
+#ifdef STM32F1
+    AHB = 8e6;
+#endif
+#ifdef STM32F4
+    AHB = 16e6;
+#endif
+    abst_init(AHB, 100);
     abst_gpio_init(&led);
     abst_digital_write(&led, 1);
 
@@ -80,11 +108,12 @@ int main(void)
         
         enum fifo_errors err = FIFO_OK;
         uint16_t rx_val = abst_usart_read_element(&USART, &err);
-        if (err == FIFO_OK)
-            abst_pwm_soft(&led, rx_val);
+//         if (err == FIFO_OK)
+//             abst_pwm_soft(&led, rx_val);
         
         abst_usart_send_msg(&USART, &rx_val, 1);
         
+        abst_toggle(&led);
         abst_delay_ms(1e3);
     }
 }
