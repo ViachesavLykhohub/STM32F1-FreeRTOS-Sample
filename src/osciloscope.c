@@ -58,7 +58,7 @@ struct abst_pin DC_OUT2 = {
 
 int main(void)
 {
-    abst_init(8e6, 0);
+    abst_init(8e6, 100);
     abst_log_init();
 
     abst_gpio_init(&DC_OUT1);

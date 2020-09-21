@@ -27,7 +27,7 @@ struct abst_lcd lcd = {
 
 int main(void)
 {
-    abst_init(16e6, 0);
+    abst_init(16e6, 100);
     abst_lcd_init(&lcd);
     abst_lcd_disp_contr(&lcd, 1, 1, 1);
     abst_lcd_set_led(&lcd, 255);

@@ -32,7 +32,8 @@ struct abst_pin led_pwm = { // Require external connected LED
 
 int main(void)
 {
-    abst_init(16e6, 1e3);
+    abst_init(16e6, 100);
+    abst_init_hard_pwm_tim1(16e6, 500);
     abst_gpio_init(&led);
     abst_gpio_init(&led_pwm);
 

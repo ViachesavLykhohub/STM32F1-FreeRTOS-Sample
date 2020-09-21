@@ -44,7 +44,7 @@ void usart3_isr(void)
 
 int main(void)
 {
-    abst_init(8e6, NULL);
+    abst_init(8e6, 100);
 
     abst_gpio_init(&TX);
     abst_gpio_init(&RX);

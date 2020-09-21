@@ -72,7 +72,7 @@ struct abst_pin_group leds = {
 
 int main(void)
 {
-    abst_init(16e6, 0);
+    abst_init(16e6, 100);
     abst_gpio_init(&led);
     abst_gpio_init(&led_pwm);
     abst_gpio_init(&led_but);

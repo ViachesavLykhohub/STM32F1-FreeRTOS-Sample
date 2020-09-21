@@ -14,7 +14,7 @@ struct abst_pin led = {
 
 int main(void)
 {
-    abst_init(8e6);
+    abst_init(8e6, 100);
     abst_gpio_init(&led);
     
 

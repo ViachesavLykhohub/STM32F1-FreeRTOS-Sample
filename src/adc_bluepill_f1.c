@@ -35,7 +35,7 @@ struct abst_pin led_pwm = {
 
 int main(void)
 {
-    abst_init(8e6, 0);
+    abst_init(8e6, 100);
     abst_adc_init_single_conv(1, 2);
     abst_gpio_init(&led_pwm);
     abst_digital_write(&led_pwm, 1);
