@@ -49,16 +49,6 @@ struct abst_pin led_but = {
     .is_inverse = true
 };
 
-// External buttons
-struct abst_pin_group buttons = {
-    .port = ABST_GPIOC,
-    .num = 1 << 6 | 1 << 8 | 1 << 9 | 1 << 11,
-    .mode = ABST_MODE_INPUT,
-    .otype = ABST_OTYPE_PP,
-    .speed = ABST_OSPEED_2MHZ,
-    .pull_up_down = ABST_PUPD_NONE,
-    .is_inverse = 0b1111
-};
 
 struct abst_pin_group leds = {
     .port = ABST_GPIOD,
@@ -102,7 +92,7 @@ int main(void)
         // Pin groups
 
         // Running light
-        abst_group_gpio_init(&buttons);
+        
         abst_group_gpio_init(&leds);
         cnt = 0;
         uint16_t val = 1;
