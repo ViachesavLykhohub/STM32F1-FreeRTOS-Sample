@@ -1,14 +1,13 @@
 #######################
-Abstract-STM32Fx-Sample
+STM32F1-FreeRTOS-Sample
 #######################
 
 Description
 ***********
 
-This repository is an example of usage `Abstract-STM32Fx <https://github.com/SlavaLikhohub/Abstract-STM32Fx>` library.
+This repository is an example of usage `Abstract-STM32Fx <https://github.com/SlavaLikhohub/Abstract-STM32Fx>` library with **freeRTOS**.
 
-It was tested using the **STM32F4DISCOVERY** installed in a **Global Logic Starter Kit** and **STM32F103 Bluepill**. 
-If you are using something else consider reviewing pinouts settings at the beginning of each example.
+It has been tested using the **STM32F103**. 
 
 Requirements
 ************
@@ -23,13 +22,13 @@ How to start
 
    .. code-block:: shell-session
       
-      git clone --recursive https://github.com/SlavaLikhohub/Abstract-STM32Fx-Sample
+      git clone --recursive https://github.com/SlavaLikhohub/STM32F1-FreeRTOS-Sample
       
    or clone first and then initialize all submodules
    
    .. code-block:: shell-session
       
-      git clone https://github.com/SlavaLikhohub/Abstract-STM32Fx-Sample
+      git clone https://github.com/SlavaLikhohub/STM32F1-FreeRTOS-Sample
       git submodule update --init --recursive
       
 #. Check pinouts at beginings of **src/*.c** files.
