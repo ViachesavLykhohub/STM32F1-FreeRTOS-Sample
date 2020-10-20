@@ -1,3 +1,6 @@
 [submodule "lib/abstractSTM32Fx"]
 	path = lib/abstractSTM32Fx
 	url = https://github.com/SlavaLikhohub/Abstract-STM32Fx
+[submodule "lib/STM32F1-FreeRTOS"]
+	path = lib/STM32F1-FreeRTOS
+	url = https://github.com/SlavaLikhohub/STM32F1-FreeRTOS

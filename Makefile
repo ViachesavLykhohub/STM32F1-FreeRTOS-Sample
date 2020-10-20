@@ -1,7 +1,7 @@
 # The main (project top) file without .c
-TARGET = blinky_stm32f4
+TARGET = freeRTOS_main
 # Device is required for libopencm3. Based on this will choose platform of abstractSTM32
-DEVICE ?= stm32f407vgt6
+DEVICE ?= stm32f103c8t6
 # All source files go here:
 SRCS = $(TARGET).c
 # other sources added like that
@@ -35,41 +35,8 @@ EXTRAFLAGS ?= $(OPTFLAGS) -std=gnu17 \
 			  -Wimplicit-function-declaration -Wredundant-decls \
 			  -Wstrict-prototypes -Wundef -Wshadow
 
-# STM32F4 Config ===============================================
-ifeq ($(DEVICE), stm32f407vgt6) #default
 
-# Version of abstract stm32fx
-TARGET_ABST ?= stm32f4
-# Possible values: soft, hard
-FPU ?= hard
-FPU_FLAGS := -mfpu=fpv4-sp-d16 -mfloat-abi=$(FPU)
-
-ARCHFLAGS := -mcpu=cortex-m4 -mthumb $(FPU_FLAGS)
-
-OOCD ?= openocd -f openocd_STM32F4.cfg
-
-LIBS += -labst_stm32f4
-
-endif
-# ==============================================================
-# STM32F1 Config ===============================================
-ifeq ($(DEVICE), stm32f103c8t6)
-
-# Version of abstract stm32fx
-TARGET_ABST ?= stm32f1
-# Possible values: soft, hard
-FPU ?= soft
-
-ARCHFLAGS := -mcpu=cortex-m3 -mthumb $(FPU_FLAGS)
-
-OOCD ?= openocd -f openocd_STM32F1.cfg
-
-LIBS += -labst_stm32f1
-
-endif
-# ==============================================================
-
-LIBS += -lopencm3 -lfifo
+LIBS_SUBM := opencm3 fifo
 
 # Directory with project sources
 SRC_DIR ?= src
@@ -89,6 +56,51 @@ include $(OPENCM3_DIR)/mk/genlink-config.mk
 VECTOR_DIR = $(ABSTSTM32_DIR)/lib/c-vector
 #Fifo dir
 FIFO_DIR = $(ABSTSTM32_DIR)/lib/fifo-buffer
+  
+# STM32F4 Config ===============================================
+ifeq ($(DEVICE), stm32f407vgt6) #default
+
+# Version of abstract stm32fx
+TARGET_ABST ?= stm32f4
+# Possible values: soft, hard
+FPU ?= hard
+FPU_FLAGS := -mfpu=fpv4-sp-d16 -mfloat-abi=$(FPU)
+
+ARCHFLAGS := -mcpu=cortex-m4 -mthumb $(FPU_FLAGS)
+
+OOCD ?= openocd -f openocd_STM32F4.cfg
+
+LIBS += -labst_stm32f4
+
+FREE_RTOS_DIR = $(LIB_DIR)/STM32F4-FreeRTOS
+
+LIBS_SUBM += freeRTOS_stm32f4
+
+endif
+# ==============================================================
+# STM32F1 Config ===============================================
+ifeq ($(DEVICE), stm32f103c8t6)
+
+# Version of abstract stm32fx
+TARGET_ABST ?= stm32f1
+# Possible values: soft, hard
+FPU ?= soft
+
+ARCHFLAGS := -mcpu=cortex-m3 -mthumb $(FPU_FLAGS)
+
+OOCD ?= openocd -f openocd_STM32F1.cfg
+
+LIBS += -labst_stm32f1
+
+FREE_RTOS_DIR = $(LIB_DIR)/STM32F1-FreeRTOS
+
+LIBS_SUBM += freeRTOS_stm32f1
+
+endif
+# ==============================================================
+
+
+LIBS += $(addprefix -l,$(LIBS_SUBM))
 
 CFLAGS := $(ARCHFLAGS)
 CFLAGS += -fdata-sections -ffunction-sections
@@ -113,15 +125,15 @@ endif
 
 # Change this if using other toolchain
 # Toolchain path could also be given here, i.e. /usr/bin/arm-none-eabi-
-TOOLCHAIN_PREFIX ?= arm-none-eabi-
+PREFIX ?= arm-none-eabi-
 
-CC = $(TOOLCHAIN_PREFIX)gcc
-CPP = $(TOOLCHAIN_PREFIX)g++
+CC = $(PREFIX)gcc
+CPP = $(PREFIX)g++
 # Change to assembler-with-cpp if also using C++
-AS = $(TOOLCHAIN_PREFIX)gcc -x assembler
-CP = $(TOOLCHAIN_PREFIX)objcopy
-SZ = $(TOOLCHAIN_PREFIX)size -G -d
-GDB = $(TOOLCHAIN_PREFIX)gdb
+AS = $(PREFIX)gcc -x assembler
+CP = $(PREFIX)objcopy
+SZ = $(PREFIX)size -G -d
+GDB = $(PREFIX)gdb
 HEX = $(CP) -O ihex -S
 BIN = $(CP) -O binary -S
 
@@ -140,6 +152,8 @@ INCS += -I$(ABSTSTM32_DIR)/include
 INCS +=  $(addprefix -I,$(INC_DIRS))
 INCS += -I$(VECTOR_DIR)/
 INCS += -I$(FIFO_DIR)/include
+INCS += -I$(FREE_RTOS_DIR)
+INCS += -I$(FREE_RTOS_DIR)/include
 
 OBJECTS = $(SRCS:.c=.o)
 
@@ -176,12 +190,17 @@ $(BUILD_DIR)/$(PROFILE)/%.a: $(ABSTSTM32_DIR)/build/%.a $(BUILD_DIR)/$(PROFILE)
 $(BUILD_DIR)/$(PROFILE)/libfifo.a: $(ABSTSTM32_DIR)/build/libfifo.a $(BUILD_DIR)/$(PROFILE)
 	cp $< $@
 
+$(BUILD_DIR)/$(PROFILE)/libfreeRTOS_stm32f%.a: $(FREE_RTOS_DIR)/.build/libfreeRTOS_stm32f%.a $(BUILD_DIR)/$(PROFILE)
+	cp $< $@
 
 $(ABSTSTM32_DIR)/build/libopencm3.a: $(ABSTSTM32_DIR)/Makefile
 	cd $(ABSTSTM32_DIR) && $(MAKE) $(MAKEFLAGS) TARGETS=$(TARGET_ABST) V=1 clean all
 
 $(ABSTSTM32_DIR)/build/libabst_$(TARGET_ABST).a: $(ABSTSTM32_DIR)/Makefile
 	cd $(ABSTSTM32_DIR) && $(MAKE) $(MAKEFLAGS) PROFILE=$(PROFILE) TARGETS=$(TARGET_ABST) V=$(V) clean all
+
+$(FREE_RTOS_DIR)/.build/%.a: $(FREE_RTOS_DIR)/Makefile
+	cd $(FREE_RTOS_DIR) && $(MAKE) $(MAKEFLAGS) CC=$(CC) AR=$(AR) CFLAGS="$(CFLAGS)" V=1 clean static 
 
 # Include rules to generate linker script
 include $(OPENCM3_DIR)/mk/genlink-rules.mk
@@ -194,9 +213,8 @@ $(OBJDIR)/%.o: $(SRC_DIR)/%.c | $(OBJDIR) $(BUILD_DIR)/$(PROFILE)/libopencm3.a
 ## Recipe for elf file, that is used for flashing and debugging, can be converted to bin/hex form
 $(BUILD_DIR)/$(PROFILE)/$(TARGET).elf: \
 $(addprefix $(OBJDIR)/,$(OBJECTS)) | \
-$(BUILD_DIR)/$(PROFILE)/libopencm3.a \
+$(addprefix $(BUILD_DIR)/$(PROFILE)/lib,$(addsuffix .a,$(LIBS_SUBM))) \
 $(BUILD_DIR)/$(PROFILE)/libabst_$(TARGET_ABST).a \
-$(BUILD_DIR)/$(PROFILE)/libfifo.a \
 $(LDSCRIPT)
 	$(CC) -T$(LDSCRIPT) $< $(LDFLAGS) -o $@
 	@echo
@@ -240,6 +258,7 @@ tidy: clean
 	cd $(ABSTSTM32_DIR) && $(MAKE) V=1 clean
 	cd $(OPENCM3_DIR) && $(MAKE) TARGETS="$(LIBOPENCM3_TARGET)" V=1 clean
 	cd $(FIFO_DIR) && $(MAKE) clean
+	cd $(FREE_RTOS_DIR) && $(MAKE) clean
 	-rm -rf $(BUILD_DIR)
 
 
